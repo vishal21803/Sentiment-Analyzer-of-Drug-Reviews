@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drug Recommendation System</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(120deg, #4661ff, #00ffee);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      color: #fff;
+    }
+
+    /* HEADER */
+    header {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.2);
+      text-align: center;
+      padding: 2rem 1rem;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    header h1 {
+      font-size: 2rem;
+      color: #ffffff;
+      text-shadow: 0px 0px 15px rgba(0, 255, 255, 0.6);
+    }
+
+    /* MAIN CONTAINER */
+    .container {
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+      width: 90%;
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 2.5rem;
+      border-radius: 20px;
+      box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .container:hover {
+      transform: translateY(-5px);
+      box-shadow: 0px 12px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    label {
+      display: block;
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-top: 1rem;
+      color: #002366;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      margin-top: 0.6rem;
+      border: 2px solid #4661ff;
+      border-radius: 10px;
+      font-size: 1rem;
+      outline: none;
+      resize: none;
+      transition: all 0.3s ease;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+      border-color: #00ffee;
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+    }
+
+    /* BUTTON SECTION */
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 2rem;
+      justify-content: center;
+    }
+
+    button,
+    .link-btn {
+      background: linear-gradient(135deg, #4661ff, #00ffee);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 0.8rem 2rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    button:hover,
+    .link-btn:hover {
+      background: linear-gradient(135deg, #00ffee, #4661ff);
+      transform: scale(1.05);
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    }
+
+    /* RESPONSIVE DESIGN */
+    @media (max-width: 576px) {
+      header h1 {
+        font-size: 1.5rem;
+        padding: 0 1rem;
+      }
+
+      .container {
+        width: 95%;
+        padding: 1.5rem;
+      }
+
+      button,
+      .link-btn {
+        width: 100%;
+        text-align: center;
+      }
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Drug Recommendation System based on Sentiment Analysis</h1>
+  </header>
+
+  <div class="container">
+    <form action="{{ url_for('analyze') }}" method="POST">
+      <label for="drug_name">Enter Drug Name:</label>
+      <input type="text" id="drug_name" name="drug_name" placeholder="e.g. Paracetamol" required>
+
+      <label for="review">Enter your Review:</label>
+      <textarea id="review" name="review" rows="5" placeholder="Example: Paracetamol finally cured my body pain & fever." required></textarea>
+
+      <div class="buttons">
+        <button type="submit">Analyze</button>
+      </div>
+    </form>
+  </div>
+
+  <footer>
+    &copy; 2025 Drug Recommendation System | Designed with ❤️
+  </footer>
+</body>
+</html>
