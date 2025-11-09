@@ -4,3 +4,4 @@ transformers
 safetensors
 requests
 matplotlib
+gunicorn
