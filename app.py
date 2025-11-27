@@ -5,7 +5,7 @@ import os
 app = Flask(__name__)
 
 
-API_URL = "https://router.huggingface.co/models/vish21803/drs-new-model"
+API_URL = "https://huggingface.co/vish21803/drs-new-model"
 HEADERS = {"Authorization": f"Bearer {os.getenv('HF_API_KEY')}"}
 
 def analyze_sentiment(text: str):
@@ -90,6 +90,7 @@ def display_data():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
 
 
 
