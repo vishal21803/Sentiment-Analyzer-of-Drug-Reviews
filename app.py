@@ -1,63 +1,41 @@
 from flask import Flask, render_template, request, redirect
 import requests
-import os
 
 app = Flask(__name__)
 
+# Your HuggingFace Space API endpoint
+API_URL = "https://vish21803-drs-api.hf.space/run/predict"
 
-API_URL = "https://huggingface.co/vish21803/drs-new-model"
-HEADERS = {"Authorization": f"Bearer {os.getenv('HF_API_KEY')}"}
 
-def analyze_sentiment(text: str):
+def analyze_sentiment(text):
+    """
+    Sends text to your HuggingFace Space and returns:
+    - sentiment (Positive/Negative/Neutral)
+    - rating (1 to 5)
+    - confidence (%)
+    """
+
     try:
-        # Call HuggingFace API
-        response = requests.post(API_URL, headers=HEADERS, json={"inputs": text}, timeout=10)
-        print("Status code:", response.status_code)
-        print("Response text:", response.text)
+        response = requests.post(API_URL, json={"data": [text]}, timeout=20)
         result = response.json()
-        
-        # DEBUG: print the raw API response
-        print("API response:", result)
+
+        # Extract expected data
+        data = result["data"][0]
+
+        return {
+            "sentiment": data["sentiment"],
+            "rating": data["rating"],
+            "confidence": data["confidence"]
+        }
 
     except Exception as e:
-        print(f"API error: {e}")
-        return {"sentiment": "Neutral", "rating": 3, "confidence": 50.0}
-
-    # Now continue processing the result...
-    if isinstance(result, list) and len(result) > 0:
-        label = result[0]["label"]
-        score = float(result[0]["score"])
-    else:
-        label = "neutral"
-        score = 0.5
-
-    # Optional keyword-based neutral detection
-    neutral_keywords = ['average', 'okay', 'not great', 'not bad', 'somewhat', 'might try', 'moderate', 'mediocre']
-    if any(k in text.lower() for k in neutral_keywords):
-        rating = 3
-        sentiment = "Neutral"
-        confidence = 50.0
-    else:
-        if score >= 0.95:
-            rating = 5
-        elif score >= 0.80:
-            rating = 4
-        elif 0.40 <= score <= 0.60:
-            rating = 3
-        elif score >= 0.20:
-            rating = 2
-        else:
-            rating = 1
-
-        sentiment = "Positive" if "POS" in label.upper() else ("Negative" if "NEG" in label.upper() else "Neutral")
-        confidence = round(score * 100, 2)
-
-    return {
-        "sentiment": sentiment,
-        "rating": rating,
-        "confidence": confidence
-    }
-
+        print("API ERROR:", e)
+        # fallback default
+        return {
+            "sentiment": "Neutral",
+            "rating": 3,
+            "confidence": 50.0
+        }
 
 
 @app.route('/')
@@ -70,7 +48,8 @@ def analyze():
     drug_name = request.form.get('drug_name', '')
     review = request.form.get('review', '')
 
-    print(f"\nAnalyzing review: {review} for drug: {drug_name}")
+    print(f"\nAnalyzing: {review}")
+
     result = analyze_sentiment(review)
 
     return render_template(
@@ -90,11 +69,3 @@ def display_data():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-
-
-
-
-
-
