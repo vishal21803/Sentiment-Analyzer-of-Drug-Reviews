@@ -1,7 +1,4 @@
 flask
-torch
-transformers
-safetensors
 requests
-matplotlib
 gunicorn
+python-dotenv
