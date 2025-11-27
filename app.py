@@ -31,38 +31,51 @@ def get_rating_and_sentiment(probability: float):
     return rating, sentiment
 
 def analyze_sentiment(text: str):
-    response = requests.post(API_URL, headers=HEADERS, json={"inputs": text})
-    
-    result = response.json()
-    
-    # Model output handling
+    try:
+        response = requests.post(API_URL, headers=HEADERS, json={"inputs": text}, timeout=10)
+        result = response.json()
+    except Exception as e:
+        print(f"API error: {e}")
+        # fallback
+        return {"sentiment": "Neutral", "rating": 3, "confidence": 50.0}
+
+    # Check if result is valid
     if isinstance(result, list) and len(result) > 0:
         label = result[0]["label"]
-        score = result[0]["score"]
+        score = float(result[0]["score"])
     else:
-        label = result.get("label", "neutral")
-        score = result.get("score", 0.5)
+        label = "neutral"
+        score = 0.5
 
-    # Rating conversion
-    if score >= 0.95:
-        rating = 5
-    elif score >= 0.80:
-        rating = 4
-    elif 0.40 <= score <= 0.60:
+    # Optional: detect mild/moderate phrases
+    neutral_keywords = ['average', 'okay', 'not great', 'not bad', 'somewhat', 'might try', 'moderate', 'mediocre']
+    if any(keyword in text.lower() for keyword in neutral_keywords):
         rating = 3
-    elif score >= 0.20:
-        rating = 2
+        sentiment = "Neutral"
+        confidence = 50.0
     else:
-        rating = 1
+        # Rating from score
+        if score >= 0.95:
+            rating = 5
+        elif score >= 0.80:
+            rating = 4
+        elif 0.40 <= score <= 0.60:
+            rating = 3
+        elif score >= 0.20:
+            rating = 2
+        else:
+            rating = 1
 
-    sentiment = "Positive" if "POS" in label.upper() else (
-                "Negative" if "NEG" in label.upper() else "Neutral")
+        # Sentiment from label
+        sentiment = "Positive" if "POS" in label.upper() else ("Negative" if "NEG" in label.upper() else "Neutral")
+        confidence = round(score * 100, 2)
 
     return {
         "sentiment": sentiment,
         "rating": rating,
-        "confidence": round(score * 100, 2)
+        "confidence": confidence
     }
+
 
 
 @app.route('/')
@@ -95,5 +108,6 @@ def display_data():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
 
 
