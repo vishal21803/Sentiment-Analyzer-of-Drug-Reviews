@@ -12,6 +12,8 @@ def analyze_sentiment(text: str):
     try:
         # Call HuggingFace API
         response = requests.post(API_URL, headers=HEADERS, json={"inputs": text}, timeout=10)
+        print("Status code:", response.status_code)
+        print("Response text:", response.text)
         result = response.json()
         
         # DEBUG: print the raw API response
@@ -88,6 +90,7 @@ def display_data():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
 
 
 
