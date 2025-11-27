@@ -1,37 +1,9 @@
 from flask import Flask, render_template, request, redirect
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, AutoConfig
-import torch
+import requests
+import os
 
-app = Flask(__name__)
-
-# Model path
-MODEL_PATH = r"vish21803/drs-new-model"
-
-# Device setup
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-# Load tokenizer and model safely
-print("Loading model...")
-try:
-    # Load config with trust_remote_code for custom models
-    config = AutoConfig.from_pretrained(MODEL_PATH, trust_remote_code=True, num_labels=2)
-    
-    # Load tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, trust_remote_code=True)
-    
-    # Load model safely
-    model = AutoModelForSequenceClassification.from_pretrained(
-        MODEL_PATH,
-        config=config,
-        trust_remote_code=True
-    )
-    model.to(device)
-    model.eval()
-    print("Model loaded successfully!")
-except Exception as e:
-    print(f"Error loading model: {e}")
-    raise e
-
+API_URL = "https://api-inference.huggingface.co/models/vish21803/drs-new-model"
+HEADERS = {"Authorization": f"Bearer {os.getenv('HF_API_KEY')}"}
 
 def get_rating_and_sentiment(probability: float):
     """Convert probability to rating and sentiment"""
@@ -55,36 +27,38 @@ def get_rating_and_sentiment(probability: float):
 
     return rating, sentiment
 
-
 def analyze_sentiment(text: str):
-    """Analyze sentiment of a given text"""
-    inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=512)
-    inputs = {k: v.to(device) for k, v in inputs.items()}
-
-    with torch.no_grad():
-        outputs = model(**inputs)
-        probabilities = torch.softmax(outputs.logits, dim=1)
-        positive_prob = float(probabilities[0][1])
-
-    # Detect neutral phrases
-    neutral_keywords = [
-        'average', 'okay', 'not great', 'not bad', 'somewhat', 
-        'might try', 'moderate', 'mediocre'
-    ]
+    response = requests.post(API_URL, headers=HEADERS, json={"inputs": text})
     
-    if any(keyword in text.lower() for keyword in neutral_keywords):
-        rating = 3
-        sentiment = "Neutral"
-        confidence = 50.0
+    result = response.json()
+    
+    # Model output handling
+    if isinstance(result, list) and len(result) > 0:
+        label = result[0]["label"]
+        score = result[0]["score"]
     else:
-        rating, sentiment = get_rating_and_sentiment(positive_prob)
-        confidence = round(positive_prob * 100, 2)
+        label = result.get("label", "neutral")
+        score = result.get("score", 0.5)
+
+    # Rating conversion
+    if score >= 0.95:
+        rating = 5
+    elif score >= 0.80:
+        rating = 4
+    elif 0.40 <= score <= 0.60:
+        rating = 3
+    elif score >= 0.20:
+        rating = 2
+    else:
+        rating = 1
+
+    sentiment = "Positive" if "POS" in label.upper() else (
+                "Negative" if "NEG" in label.upper() else "Neutral")
 
     return {
-        'sentiment': sentiment,
-        'rating': rating,
-        'confidence': confidence,
-        'raw_probability': positive_prob
+        "sentiment": sentiment,
+        "rating": rating,
+        "confidence": round(score * 100, 2)
     }
 
 
@@ -118,3 +92,4 @@ def display_data():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
