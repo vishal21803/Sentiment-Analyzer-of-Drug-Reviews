@@ -10,13 +10,18 @@ HEADERS = {"Authorization": f"Bearer {os.getenv('HF_API_KEY')}"}
 
 def analyze_sentiment(text: str):
     try:
+        # Call HuggingFace API
         response = requests.post(API_URL, headers=HEADERS, json={"inputs": text}, timeout=10)
         result = response.json()
+        
+        # DEBUG: print the raw API response
+        print("API response:", result)
+
     except Exception as e:
         print(f"API error: {e}")
         return {"sentiment": "Neutral", "rating": 3, "confidence": 50.0}
 
-    # Handle API response
+    # Now continue processing the result...
     if isinstance(result, list) and len(result) > 0:
         label = result[0]["label"]
         score = float(result[0]["score"])
@@ -31,7 +36,6 @@ def analyze_sentiment(text: str):
         sentiment = "Neutral"
         confidence = 50.0
     else:
-        # Convert score to rating
         if score >= 0.95:
             rating = 5
         elif score >= 0.80:
@@ -43,7 +47,6 @@ def analyze_sentiment(text: str):
         else:
             rating = 1
 
-        # Sentiment from API label
         sentiment = "Positive" if "POS" in label.upper() else ("Negative" if "NEG" in label.upper() else "Neutral")
         confidence = round(score * 100, 2)
 
@@ -85,6 +88,7 @@ def display_data():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
 
 
 
