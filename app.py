@@ -8,38 +8,15 @@ app = Flask(__name__)
 API_URL = "https://api-inference.huggingface.co/models/vish21803/drs-new-model"
 HEADERS = {"Authorization": f"Bearer {os.getenv('HF_API_KEY')}"}
 
-def get_rating_and_sentiment(probability: float):
-    """Convert probability to rating and sentiment"""
-    if probability >= 0.95:
-        rating = 5
-    elif probability >= 0.80:
-        rating = 4
-    elif 0.40 <= probability <= 0.60:
-        rating = 3
-    elif probability >= 0.20:
-        rating = 2
-    else:
-        rating = 1
-
-    if probability >= 0.80:
-        sentiment = "Positive"
-    elif probability <= 0.40:
-        sentiment = "Negative"
-    else:
-        sentiment = "Neutral"
-
-    return rating, sentiment
-
 def analyze_sentiment(text: str):
     try:
         response = requests.post(API_URL, headers=HEADERS, json={"inputs": text}, timeout=10)
         result = response.json()
     except Exception as e:
         print(f"API error: {e}")
-        # fallback
         return {"sentiment": "Neutral", "rating": 3, "confidence": 50.0}
 
-    # Check if result is valid
+    # Handle API response
     if isinstance(result, list) and len(result) > 0:
         label = result[0]["label"]
         score = float(result[0]["score"])
@@ -47,14 +24,14 @@ def analyze_sentiment(text: str):
         label = "neutral"
         score = 0.5
 
-    # Optional: detect mild/moderate phrases
+    # Optional keyword-based neutral detection
     neutral_keywords = ['average', 'okay', 'not great', 'not bad', 'somewhat', 'might try', 'moderate', 'mediocre']
-    if any(keyword in text.lower() for keyword in neutral_keywords):
+    if any(k in text.lower() for k in neutral_keywords):
         rating = 3
         sentiment = "Neutral"
         confidence = 50.0
     else:
-        # Rating from score
+        # Convert score to rating
         if score >= 0.95:
             rating = 5
         elif score >= 0.80:
@@ -66,7 +43,7 @@ def analyze_sentiment(text: str):
         else:
             rating = 1
 
-        # Sentiment from label
+        # Sentiment from API label
         sentiment = "Positive" if "POS" in label.upper() else ("Negative" if "NEG" in label.upper() else "Neutral")
         confidence = round(score * 100, 2)
 
@@ -108,6 +85,7 @@ def display_data():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
 
 
 
