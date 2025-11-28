@@ -9,7 +9,6 @@ This is a Flask-based web application that analyzes drug reviews using a custom 
 - Analyze sentiment of drug reviews (Positive / Neutral / Negative)
 - Provides a rating (1–5) based on confidence
 - Shows confidence score
-- Works locally or via a public URL using Cloudflare Tunnel
 - Easy to extend for other NLP tasks
 
 ---
